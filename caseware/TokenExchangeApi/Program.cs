@@ -128,7 +128,8 @@ app.MapPost("/oauth/v2/token", async (
                 AccessToken:     s.Token.TokenString,
                 IssuedTokenType: TokenTypeJwt,
                 TokenType:       "Bearer",
-                ExpiresIn:       600),
+                // Compute from actual expiry — stays correct if DownstreamTtlMinutes changes.
+                ExpiresIn:       Math.Max(0, (int)(s.Token.ExpiresAt - DateTime.UtcNow).TotalSeconds)),
             AppJsonSerializerContext.Default.TokenExchangeResponse,
             statusCode: StatusCodes.Status200OK),
 

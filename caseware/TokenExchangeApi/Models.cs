@@ -48,7 +48,7 @@ internal abstract record ExchangeResult
 
 internal sealed record ActClaim(
     [property: JsonPropertyName("sub")]             string  Sub,
-    [property: JsonPropertyName("client_id")]       string  ClientId,
+    [property: JsonPropertyName("client_id")]       string? ClientId,       // nullable: absent in some IdP tokens
     [property: JsonPropertyName("service_version")] string? ServiceVersion);
 
 // ── Downstream Resource Endpoint Response ─────────────────────────────────────

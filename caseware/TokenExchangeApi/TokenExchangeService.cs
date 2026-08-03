@@ -40,6 +40,20 @@ internal sealed class TokenExchangeService : ITokenExchangeService
             return Fail("unsupported_grant_type",
                 $"grant_type must be '{GrantTypeTokenExchange}'.");
 
+        // ── RFC 8693 §2.1: Token type hints must be explicit JWT URNs ─────────────
+        if (request.SubjectTokenType != TokenTypeJwt)
+            return Fail("invalid_request",
+                $"subject_token_type must be '{TokenTypeJwt}'.");
+
+        if (request.ActorTokenType != TokenTypeJwt)
+            return Fail("invalid_request",
+                $"actor_token_type must be '{TokenTypeJwt}'.");
+
+        if (!string.IsNullOrEmpty(request.RequestedTokenType)
+            && request.RequestedTokenType != TokenTypeJwt)
+            return Fail("invalid_request",
+                $"requested_token_type '{request.RequestedTokenType}' is not supported.");
+
         if (string.IsNullOrWhiteSpace(request.SubjectToken))
             return Fail("invalid_request", "subject_token is required.");
 
@@ -188,8 +202,13 @@ internal sealed class TokenExchangeService : ITokenExchangeService
         var now     = DateTime.UtcNow;
         var expires = now.AddMinutes(_jwt.DownstreamTtlMinutes);
 
-        // Preserve the original user's identity claims — immutable through delegation.
-        var sub        = subjectPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)!;
+        // Guard: RFC 7519 does not mandate 'sub', but our downstream audit contract requires it.
+        var sub = subjectPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        if (string.IsNullOrEmpty(sub))
+            throw new InvalidOperationException(
+                "subject_token passed validation but contains no 'sub' claim. " +
+                "Ensure the IdP is configured to include 'sub' in all issued tokens.");
+
         var tenantId   = subjectPrincipal.FindFirstValue("tenant_id");
         var permEpoch  = subjectPrincipal.FindFirstValue("perm_epoch");
         var serviceVer = actorPrincipal.FindFirstValue("service_version");

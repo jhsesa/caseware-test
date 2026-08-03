@@ -1,7 +1,7 @@
 # System Prompt & Coding Standards
 
 ## Tech Stack
-- C# 12 / .NET 8
+- C# 12 / .NET 10
 - ASP.NET Core Minimal APIs
 - `Microsoft.AspNetCore.Authentication.JwtBearer`
 

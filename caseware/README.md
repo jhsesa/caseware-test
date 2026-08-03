@@ -113,6 +113,8 @@ The take-home test explicitly asks for transparency about AI tool usage. This su
 - AI suggested `JwtBearerHandler` for the `/oauth/v2/token` endpoint — correctly overridden: the token is in the form body, not the `Authorization` header, so `JwtSecurityTokenHandler` must be used directly
 - AI did not include `ClockSkew` configuration in `TokenValidationParameters` — added explicitly after recognizing it as a production requirement for distributed systems
 - AI initially generated a `static partial class Program` — changed to `public partial class Program` to allow `WebApplicationFactory<Program>` from the test project
+- AI confidently extracted the subject using `JwtRegisteredClaimNames.Sub` without accounting for .NET 10's automatic claim mapping to `ClaimTypes.NameIdentifier`, which caused null reference exceptions and validation bypasses. Corrected by implementing a dual-check fallback.
+- AI assumed `PropertyNameCaseInsensitive = true` would automatically map `delegated_by` to `DelegatedBy` on C# records using .NET 10 Source Generators. Corrected by explicitly adding `[JsonPropertyName]` attributes to prevent silent deserialization failures.
 
 ### How I would guide engineers using AI on this system
 - **Use AI for structural scaffolding**, not for security decisions. Let it generate the DI wiring, but verify every `TokenValidationParameters` field manually against the RFC.
@@ -124,6 +126,7 @@ The take-home test explicitly asks for transparency about AI tool usage. This su
 - **Threat modeling** — AI can list common attack patterns but cannot evaluate your specific tenant isolation model or data sensitivity.
 - **Audit log schema** — AI will generate plausible schemas but cannot know what your compliance team requires for a SOC 2 or ISO 27001 audit trail.
 - **Performance under load** — AI benchmarks are generalized; validate with your actual traffic shape (multi-tenant burst patterns differ significantly from single-tenant).
+- **Framework Upgrade Nuances** — AI models often default to patterns from previous versions (e.g., .NET 8). They should not be trusted with the subtle breaking changes of newer frameworks (like .NET 10 claim mapping or AOT/Source Generator JSON quirks) without rigorous integration testing.
 
 ---
 

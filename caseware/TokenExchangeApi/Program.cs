@@ -94,6 +94,48 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();  // browsable at /swagger
+
+    app.MapGet("/api/v1/dev/mint-tokens", (IOptions<JwtSettings> jwtOptions) =>
+    {
+        var jwt = jwtOptions.Value;
+        var signingKey = new SymmetricSecurityKey(Convert.FromBase64String(jwt.SigningKeyBase64));
+        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+        var handler = new JwtSecurityTokenHandler();
+        
+        var subjectToken = handler.WriteToken(new JwtSecurityToken(
+            issuer: jwt.Issuer,
+            audience: jwt.InternalAudience,
+            claims: [
+                new Claim(JwtRegisteredClaimNames.Sub, "user-integration-001"),
+                new Claim("scope", "financial:read documents:read"),
+                new Claim("tenant_id", "acme-corp"),
+                new Claim("perm_epoch", "1")
+            ],
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials
+        ));
+
+        var actorToken = handler.WriteToken(new JwtSecurityToken(
+            issuer: jwt.Issuer,
+            audience: $"{jwt.Issuer}/token",
+            claims: [
+                new Claim(JwtRegisteredClaimNames.Sub, "svc:reporting-service"),
+                new Claim("client_id", "reporting-service"),
+                new Claim("service_version", "2.4.1")
+            ],
+            notBefore: DateTime.UtcNow,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials
+        ));
+
+        return Results.Json(
+            new TestTokensResponse(subjectToken, actorToken),
+            AppJsonSerializerContext.Default.TestTokensResponse);
+    })
+    .WithName("MintTestTokens")
+    .WithSummary("Mint test JWTs for manual simulation (DEV ONLY)")
+    .Produces<TestTokensResponse>(StatusCodes.Status200OK, "application/json");
 }
 
 // ── 4. POST /oauth/v2/token — RFC 8693 Token Exchange ─────────────────────────

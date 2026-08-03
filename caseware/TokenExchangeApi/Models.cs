@@ -53,6 +53,11 @@ internal sealed record ActClaim(
 
 // ── Downstream Resource Endpoint Response ─────────────────────────────────────
 
+/// <summary>Stub payload for dev token minting.</summary>
+internal sealed record TestTokensResponse(
+    [property: JsonPropertyName("subject_token")] string SubjectToken,
+    [property: JsonPropertyName("actor_token")]   string ActorToken);
+    
 /// <summary>
 /// Returned by GET /api/v1/workspaces/{id}/financial-data.
 /// Both <see cref="Subject"/> and <see cref="DelegatedBy"/> are extracted from
@@ -84,6 +89,7 @@ internal sealed record FinancialData(
 [JsonSerializable(typeof(AuditableAccessResponse))]
 [JsonSerializable(typeof(ActorInfo))]
 [JsonSerializable(typeof(FinancialData))]
+[JsonSerializable(typeof(TestTokensResponse))]
 internal sealed partial class AppJsonSerializerContext : JsonSerializerContext { }
 
 // ── Configuration ─────────────────────────────────────────────────────────────

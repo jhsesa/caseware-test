@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Caseware.Collaborate.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Ensure test output is verbose enough to diagnose assertion failures -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference the API project — gives access to internal types via InternalsVisibleTo -->
+    <ProjectReference Include="..\TokenExchangeApi\Caseware.Collaborate.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test runner -->
+    <PackageReference Include="xunit"                            Version="2.*" />
+    <PackageReference Include="xunit.runner.visualstudio"        Version="2.*">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk"           Version="17.*" />
+
+    <!-- WebApplicationFactory — spins up the real ASP.NET Core pipeline in-process -->
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.*" />
+
+    <!-- Testcontainers — manages the Docker lifecycle of Redis during the test run -->
+    <PackageReference Include="Testcontainers.Redis"             Version="3.*" />
+
+    <!-- Redis client for seeding/revoking epoch state directly in tests -->
+    <PackageReference Include="StackExchange.Redis"              Version="2.*" />
+  </ItemGroup>
+
+</Project>

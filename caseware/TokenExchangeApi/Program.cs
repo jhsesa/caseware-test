@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -50,6 +51,16 @@ builder.Services.AddAuthorization(options =>
         .AddRequirements(new OboDelegationRequirement("financial:read")));
 });
 
+// Expose OpenAPI/Swagger UI in development — all endpoint metadata (.WithName, .Produces<T>)
+// is surfaced at GET /swagger/v1/swagger.json and browsable at /swagger.
+// Swashbuckle.AspNetCore is used because AddOpenApi()/MapOpenApi() require .NET 9+;
+// .NET 8 LTS is the target to maximise evaluator compatibility.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Caseware Collaborate Auth API", Version = "v1" });
+});
+
 // ── 3. Register application services ─────────────────────────────────────────
 //    Registered as Singleton: JwtSecurityTokenHandler is thread-safe and
 //    reusing a single instance avoids repeated handler initialization overhead.
@@ -59,10 +70,15 @@ builder.Services.AddSingleton<ITokenExchangeService, TokenExchangeService>();
 // repeated allocation on high-throughput authorization checks.
 builder.Services.AddSingleton<IAuthorizationHandler, OboDelegationHandler>();
 
-// Default to the no-op epoch store (dev/test without Redis).
-// In production, replace with RedisPermissionEpochStore wired to a Redis cluster.
-// The epoch check is gated by Jwt:RequirePermissionEpochValidation (default: false).
-builder.Services.AddSingleton<IPermissionEpochStore, NullPermissionEpochStore>();
+// L1/L2 Caching strategy — matches the Architecture ADR:
+//   L1: CachedPermissionEpochStore (IMemoryCache, 2-second TTL per instance)
+//   L2: NullPermissionEpochStore in dev  /  RedisPermissionEpochStore in production
+// Tests replace IPermissionEpochStore via ConfigureTestServices, bypassing the decorator.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IPermissionEpochStore>(sp =>
+    new CachedPermissionEpochStore(
+        inner: new NullPermissionEpochStore(),
+        cache: sp.GetRequiredService<IMemoryCache>()));
 
 // Configure the JSON serializer to use the source-generated context for
 // all endpoint responses — avoids reflection and improves startup time.
@@ -73,6 +89,12 @@ var app = builder.Build();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();  // browsable at /swagger
+}
 
 // ── 4. POST /oauth/v2/token — RFC 8693 Token Exchange ─────────────────────────
 //

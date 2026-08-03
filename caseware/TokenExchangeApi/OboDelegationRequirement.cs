@@ -104,7 +104,24 @@ internal sealed class OboDelegationHandler(
                     return;
                 }
 
-                var storedEpoch = await epochStore.GetCurrentEpochAsync(userId);
+                long? storedEpoch;
+                try
+                {
+                    storedEpoch = await epochStore.GetCurrentEpochAsync(userId);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    // Epoch store unavailable (Redis down, network partition).
+                    // Fail closed — 403 is safer than allowing access to financial data.
+                    // In production: pair with a Polly circuit breaker on IConnectionMultiplexer
+                    // to stop hammering Redis after N consecutive failures.
+                    logger.LogError(ex,
+                        "Epoch store unavailable during authorization. Failing closed. sub={Sub}",
+                        userId);
+                    context.Fail(new AuthorizationFailureReason(
+                        this, "Authorization service temporarily unavailable."));
+                    return;
+                }
 
                 // Fail closed on both null (key revoked/deleted) and mismatch.
                 if (storedEpoch is null || storedEpoch.Value != jwtEpoch)

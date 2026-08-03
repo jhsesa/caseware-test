@@ -17,6 +17,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.*" />
     <!-- L2 Redis epoch store for sub-second permission revocation. -->
     <PackageReference Include="StackExchange.Redis" Version="2.*" />
+    <!--
+      Swashbuckle generates the OpenAPI spec from endpoint metadata (.WithName, .Produces).
+      Available at GET /swagger/v1/swagger.json in development.
+      Compatible with .NET 8 LTS — unlike Microsoft.AspNetCore.OpenApi which requires .NET 9+.
+    -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.*" />
   </ItemGroup>
 
   <ItemGroup>

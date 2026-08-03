@@ -1,0 +1,42 @@
+## .NET gitignore
+
+# Build output
+bin/
+obj/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.DS_Store
+
+# Test results
+TestResults/
+coverage/
+*.coveragexml
+*.trx
+
+# Secrets — NEVER commit signing keys
+appsettings.Production.json
+*.pfx
+*.p12
+secrets.json
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.bak

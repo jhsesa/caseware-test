@@ -61,7 +61,7 @@ internal sealed class RedisPermissionEpochStore(IConnectionMultiplexer redis)
     public async Task<long?> GetCurrentEpochAsync(string userId, CancellationToken ct = default)
     {
         var value = await redis.GetDatabase().StringGetAsync(Key(userId));
-        return value.HasValue && long.TryParse(value, out var epoch) ? epoch : null;
+        return value.HasValue && long.TryParse((string)value!, out var epoch) ? epoch : null;
     }
 
     public async Task SetEpochAsync(string userId, long epoch, CancellationToken ct = default) =>

@@ -171,12 +171,13 @@ public sealed class PermissionRevocationTests : IClassFixture<CollaborateWebFact
     // Local DTO mirrors AuditableAccessResponse — tests should not depend on
     // the internal type directly; deserialising to a local record is more robust.
     private sealed record ResponseBody(
-        string     WorkspaceId,
-        string     Subject,
-        ActorDto   DelegatedBy,
-        string     ScopeUsed);
+        [property: System.Text.Json.Serialization.JsonPropertyName("workspace_id")] string WorkspaceId,
+        [property: System.Text.Json.Serialization.JsonPropertyName("subject")] string Subject,
+        [property: System.Text.Json.Serialization.JsonPropertyName("delegated_by")] ActorDto DelegatedBy,
+        [property: System.Text.Json.Serialization.JsonPropertyName("scope_used")] string ScopeUsed);
 
-    private sealed record ActorDto(string Sub);
+    private sealed record ActorDto(
+        [property: System.Text.Json.Serialization.JsonPropertyName("sub")] string Sub);
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {

@@ -45,7 +45,7 @@ internal sealed class OboDelegationHandler(
         {
             logger.LogWarning(
                 "OBO policy failed: 'act' claim absent. sub={Sub}",
-                user.FindFirstValue(JwtRegisteredClaimNames.Sub));
+                user.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? user.FindFirstValue(ClaimTypes.NameIdentifier));
             return;
         }
 
@@ -92,7 +92,7 @@ internal sealed class OboDelegationHandler(
         // to allow running without a Redis dependency.
         if (_jwt.RequirePermissionEpochValidation)
         {
-            var userId      = user.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            var userId      = user.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? user.FindFirstValue(ClaimTypes.NameIdentifier);
             var jwtEpochStr = user.FindFirstValue("perm_epoch");
 
             if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(jwtEpochStr))
@@ -137,7 +137,7 @@ internal sealed class OboDelegationHandler(
 
         logger.LogDebug(
             "OBO policy satisfied. sub={Sub} act={ActSub} scope={Scope}",
-            user.FindFirstValue(JwtRegisteredClaimNames.Sub),
+            user.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? user.FindFirstValue(ClaimTypes.NameIdentifier),
             actClaim.Sub,
             requirement.RequiredScope);
 

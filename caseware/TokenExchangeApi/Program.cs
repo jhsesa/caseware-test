@@ -189,7 +189,10 @@ app.MapGet("/api/v1/workspaces/{workspaceId}/financial-data",
         var user = httpContext.User;
 
         // ── Extract subject (the original user) ───────────────────────────────
-        var sub = user.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? "unknown";
+        var sub = user.FindFirstValue(JwtRegisteredClaimNames.Sub) 
+                  ?? user.FindFirstValue(ClaimTypes.NameIdentifier) 
+                  ?? "unknown";
+        Console.WriteLine("CLAIMS IN USER: " + string.Join(", ", user.Claims.Select(c => $"{c.Type}={c.Value}")));
 
         // ── Extract and deserialise the act claim (the intermediary service) ──
         // The JwtBearerMiddleware retains JSON object claims as their serialised

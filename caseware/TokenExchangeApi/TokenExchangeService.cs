@@ -135,7 +135,7 @@ internal sealed class TokenExchangeService : ITokenExchangeService
 
         _logger.LogInformation(
             "Token exchange issued. sub={Sub} act={ActorClientId} aud={Audience} scope=[{Scope}]",
-            validatedSubject.FindFirstValue(JwtRegisteredClaimNames.Sub),
+            validatedSubject.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? validatedSubject.FindFirstValue(ClaimTypes.NameIdentifier),
             actorClientId,
             request.Audience,
             string.Join(' ', effectiveScopes));
@@ -203,7 +203,7 @@ internal sealed class TokenExchangeService : ITokenExchangeService
         var expires = now.AddMinutes(_jwt.DownstreamTtlMinutes);
 
         // Guard: RFC 7519 does not mandate 'sub', but our downstream audit contract requires it.
-        var sub = subjectPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var sub = subjectPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub) ?? subjectPrincipal.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(sub))
             throw new InvalidOperationException(
                 "subject_token passed validation but contains no 'sub' claim. " +
